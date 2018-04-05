@@ -1,36 +1,47 @@
 import React, { Component } from 'react';
 import './App.css';
-import kelvinToFahrenheit from 'kelvin-to-fahrenheit'
-import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import axios from 'axios'
-import WeatherInfo from './components/WeatherInfo'
-const API_KEY = '2a712a7b6e8b9d477185c6f64032d136'
-
+import Current from './components/Current'
+import FiveDay from './components/FiveDay'
+import SixteenDay from './components/SixteenDay'
+import SearchBar from './components/Searchbar'
 
 class App extends Component {
   state = {
-    currWeather: []
+    currWeather: {},
+    fiveDay: {}
   }
 
   //fetching...
   componentDidMount(){
-    axios.get(`http://api.openweathermap.org/data/2.5/weather?q=Phoenix&appid=${API_KEY}`)
-    .then(currWeather => {
-      //console.log('current weather data:', currWeather.data)
-      this.setState({ currWeather: currWeather.data })
+    Promise.all([
+      axios.get(`http://api.openweathermap.org/data/2.5/weather?q=Phoenix&appid=${process.env.REACT_APP_API_KEY}&units=imperial`),
+      axios.get(`http://api.openweathermap.org/data/2.5/forecast?q=Phoenix&appid=${process.env.REACT_APP_API_KEY}&units=imperial`)    ])
+    .then(result => {
+      //console.log('result', result)
+      let [ current, fiveDay ] = result
+      this.setState({
+        currWeather: current.data,
+        fiveDay: fiveDay.data,
+      })
     })
   }
 
   render() {
-    console.log('api key:', API_KEY)
-    console.log('Phx Current Weather:', this.state.currWeather)
-    console.log('Phx KtoF temp:', kelvinToFahrenheit(296.85))
+    //console.log('Phx Current Weather:', this.state.currWeather)
+    //console.log('Phx FiveDay:', this.state.fiveDay)
+    //console.log('api key', process.env.REACT_APP_API_KEY);
     return (
       <div className="App">
-        <Navbar />
-        <h1>Hello World</h1>
-        <WeatherInfo currWeather={this.state.currWeather}/>
+        <SearchBar />
+        <Current
+          currWeatherTemp={this.state.currWeather.main}
+          cityName={this.state.currWeather.name}
+          currWeatherDesc={this.state.currWeather.weather}
+        />
+        <FiveDay fiveDay = {this.state.fiveDay.list}/>
+        <SixteenDay />
         <Footer />
       </div>
     );
